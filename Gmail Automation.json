@@ -1,0 +1,165 @@
+{
+  "name": "My workflow 4",
+  "nodes": [
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "6978ae5b-e396-4978-bd70-99032da5f9f4",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "68m9VC2PIvBXhXe6",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "5091e525-0e4b-441d-b772-86cc0c6f0aab",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "SCrMPuS2TxLDeJY2",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an AI email assistant for a business professional named Manish Saini.\nYour task is to read the incoming email and generate a polite, professional, and concise reply only if the email is from a client, potential client, or related to job/project opportunities.\n\nRules:\n\nIf the email looks like spam, promotional, or system-generated (e.g., confirmations, ads, newsletters, notifications), do not reply. Just return: {\"to\": \"{{ $json.headers['return-path'] }}\", \"subject\": \"\", \"message\": \"No reply needed.\"}\n\nIf the email is from a genuine client or about a job/freelance opportunity, write a clear, respectful reply.\n\nKeep the reply short and to the point (few sentences, max ~80 words).\n\nProvide an estimated cost and timeline that is competitive (fresher-level pricing) while keeping the tone confident and professional.\n\nPresent Manish Saini as a skilled developer who delivers quality work, not as a fresher.\n\nBe open to negotiation without sounding uncertain.\n\nDo not repeat the original email.\n\nAlways include a professional subject line for the reply.\n\nAlways use a professional, confident tone.\n\nKeep it in plain text (no markdown, no code block).\n\nAlways sign the reply with:\nBest regards,\nManish Saini\n\nOutput format:\nReturn ONLY a valid JSON object with exactly three keys:\n{\n\"to\": \"{{ $json.to.value[0].address }}\",\n\"subject\": \"string\",\n\"message\": \"string\"\n}\n\nDo not include explanations, do not wrap in backticks, do not put JSON inside quotes, do not output anything except the JSON object.\n\nEmail to reply:\n{{ $json.text }}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "775410c0-dcf3-424f-b6ee-95346ac30d8b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ $json[\"subject\"] }}",
+        "message": "={{ $json.message }}",
+        "options": {
+          "sendTo": "={{ $json.to }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        704,
+        0
+      ],
+      "id": "cc6bce8e-cc65-4be8-98ae-b9dd40efd87c",
+      "name": "Create a draft",
+      "webhookId": "ba13724b-e08b-4870-a35a-ecec26de6285",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "SCrMPuS2TxLDeJY2",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return JSON.parse($input.first().json.output);\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        0
+      ],
+      "id": "b1aa4e2d-f31b-4be5-99ae-a28908827405",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Create a draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "638d4479-f8c5-493c-9910-6e96f623cf81",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "62d6a5ba3793c82bd9dc261354a635d742481dca693c272fb00332e025ad896f"
+  },
+  "id": "CceGfwRMnou1YwJb",
+  "tags": []
+}
